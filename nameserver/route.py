@@ -14,7 +14,7 @@ class NameServer:
         p = os.path.join('~', '.takephoto', self.type)
         return os.path.expanduser(p)
 
-    def get_names(self, server):
+    def get_name(self, server):
         names = {}
         full_path = self.get_name_file()
         if os.path.exists(full_path):
@@ -22,6 +22,14 @@ class NameServer:
                 names = json.load(f)
         if server in names:
             return names[server]
+        return names
+
+    def get_names(self):
+        names = {}
+        full_path = self.get_name_file()
+        if os.path.exists(full_path):
+            with open(full_path, 'r') as f:
+                names = json.load(f)
         return names
 
     def save_names(self, data):
@@ -47,9 +55,13 @@ def define_controller(app):
     def name():
         server = request.args.get('server')
         name_server = NameServer(app=app)
+        if 'all' == server:
+            ret = name_server.get_names()
+            return jsonify(ret)
+
         if not name_server.allow_server(server):
             return jsonify({})
-        ret = name_server.get_names(server)
+        ret = name_server.get_name(server)
         return jsonify(ret)
 
     @app.route('/name', methods=['PUT'])
